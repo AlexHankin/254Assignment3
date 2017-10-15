@@ -488,13 +488,13 @@ let parse (parse_tab:parse_table) (program:string) : parse_tree =
           if is_terminal tos gram then
             if tos = term then
               begin
-              
+              (*
                 print_string ("   match " ^ tos);
                 print_string
-                    (if tos <> term     (*value comparison*)
+                    (if tos <> term      (* value comparison *)
                          then (" (" ^ tok ^ ")") else "");
                 print_newline ();
-              
+              *)
                 helper ps_tail more_tokens
                        (( match term with
                           | "id"  -> PT_id tok
@@ -509,11 +509,11 @@ let parse (parse_tab:parse_table) (program:string) : parse_tree =
                                ^ " when seeing " ^ tok)
             | PA_prediction(rhs) ->
                 begin
-                
+                (*
                   print_string ("   predict " ^ tos ^ " ->");
                   print_string (fold_left (fun a b -> a ^ " " ^ b) "" rhs);
                   print_newline ();
-                
+                *)
                   helper ((fold_left (@) [] 
                                     (map (fun s -> [PS_sym(s)]) rhs))
                               @ [PS_end(length rhs)] @ ps_tail)
@@ -524,8 +524,6 @@ let parse (parse_tab:parse_table) (program:string) : parse_tree =
 let cg_parse_table = get_parse_table calc_gram;;
 
 let ecg_parse_table = get_parse_table ecg;;
-(* let cg_parse_tree = parse cg_parse_table calc_gram;; parse trees to later pass as parameter to act_ize_P *)
-let ecg_parse_tree = parse ecg_parse_table sum_ave_prog;;
 
 (*******************************************************************
   Everything above this point in the file is complete and (I think)
@@ -551,46 +549,41 @@ and ast_e =
 | AST_num of string;;
 
 let rec ast_ize_P (p:parse_tree) : ast_sl =
-  match p with
-  | PT_nt ("P", [sl]) -> ast_ize_SL sl
-  | _ ->  raise (Failure "malformed parse tree in ast_ize_P")
+  (* your code should replace the following line *)
+  []
 
 and ast_ize_SL (sl:parse_tree) : ast_sl =
   match sl with
   | PT_nt ("SL", []) -> []
-(*   | PT_nt ("SL", [stat; stat_list]) 
-        -> ast_ize_S stat;
-          ast_ize_SL stat_list; *)
+  (*
+     your code here ...
+  *)
   | _ -> raise (Failure "malformed parse tree in ast_ize_SL")
 
 and ast_ize_S (s:parse_tree) : ast_s =
   match s with
   | PT_nt ("S", [PT_id lhs; PT_term ":="; expr])
         -> AST_assign (lhs, (ast_ize_expr expr))
-  | PT_nt ("S", [PT_term "read"; PT_id rhs]) 
-        -> AST_read rhs
-  | PT_nt ("S", [PT_term "write"; expr])
-        -> AST_write (ast_ize_expr expr)
-  | PT_nt ("S", [PT_term "if"; rel; sl; PT_term "fi"])
-        -> AST_if ((ast_ize_expr rel), (ast_ize_SL sl))
-  | PT_nt ("S", [PT_term "do"; sl; PT_term "od"])
-        -> AST_do (ast_ize_SL sl)
-  | PT_nt ("S", [PT_term "check"; rel])
-        -> AST_check (ast_ize_expr rel)
+  (*
+     your code here ...
+  *)
   | _ -> raise (Failure "malformed parse tree in ast_ize_S")
+hjkhkjhk
 and ast_ize_expr (e:parse_tree) : ast_e =
   (* e is an R, E, T, or F parse tree node *)
   match e with
-  | PT_nt ("E", [PT_id lhs; expr_tail])
-        -> AST_id lhs
-
+  (*
+     your code here ...
+  *)
   | _ -> raise (Failure "malformed parse tree in ast_ize_expr")
 
 and ast_ize_reln_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
-  
+  (* lhs in an inheritec attribute.
+     tail is an ET parse tree node *)
   match tail with
-  
-
+  (*
+     your code here ...
+  *)
   | _ -> raise (Failure "malformed parse tree in ast_ize_reln_tail")
 
 and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
