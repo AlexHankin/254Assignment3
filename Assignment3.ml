@@ -553,65 +553,85 @@ and ast_e =
 
 let rec ast_ize_P (p:parse_tree) : ast_sl =
   match p with
-  | PT_nt ("P", [sl]) 
-        -> ast_ize_SL sl
-  | _ ->  raise (Failure "malformed parse tree in ast_ize_P")
+  | PT_nt ("P", [sl])
+        -> (* print_string "P"; *)
+        ast_ize_SL sl
+ | _ ->  raise (Failure "malformed parse tree in ast_ize_P")
 
 and ast_ize_SL (sl:parse_tree) : ast_sl =
   match sl with
   | PT_nt ("SL", []) -> []
   | PT_nt ("SL", [stat; stat_list]) 
-        -> (ast_ize_S stat) :: (ast_ize_SL stat_list)
+        -> print_string "SL";
+        (ast_ize_S stat) :: (ast_ize_SL stat_list)
   | _ -> raise (Failure "malformed parse tree in ast_ize_SL")
 
 and ast_ize_S (s:parse_tree) : ast_s =
   match s with
   | PT_nt ("S", [PT_id lhs; PT_term ":="; expr])
-        -> AST_assign (lhs, (ast_ize_expr expr))
+        -> print_string "S -> := ";
+        AST_assign (lhs, (ast_ize_expr expr))
   | PT_nt ("S", [PT_term "read"; PT_id rhs]) 
-        -> AST_read rhs
+        ->print_string "S -> read";
+         AST_read rhs
   | PT_nt ("S", [PT_term "write"; expr])
-        -> AST_write (ast_ize_expr expr)
+        -> print_string "S -> write ";
+        AST_write (ast_ize_expr expr)
   | PT_nt ("S", [PT_term "if"; rel; sl; PT_term "fi"])
-        -> AST_if ((ast_ize_expr rel), (ast_ize_SL sl))
+        -> print_string "S -> if";
+        AST_if ((ast_ize_expr rel), (ast_ize_SL sl))
   | PT_nt ("S", [PT_term "do"; sl; PT_term "od"])
-        -> AST_do (ast_ize_SL sl)
+        ->print_string "S -> do ";
+         AST_do (ast_ize_SL sl)
   | PT_nt ("S", [PT_term "check"; rel])
-        -> AST_check (ast_ize_expr rel)
+        -> print_string "S -> check ";
+        AST_check (ast_ize_expr rel)
   | _ -> raise (Failure "malformed parse tree in ast_ize_S")
 
 and ast_ize_expr (e:parse_tree) : ast_e =
   (* e is an R, E, T, or F parse tree node *)
   match e with
   | PT_nt ("R", [expr; expr_tail])
-        -> ast_ize_reln_tail (ast_ize_expr expr) expr_tail
+        -> print_string "R";
+        ast_ize_reln_tail (ast_ize_expr expr) expr_tail
   | PT_nt ("E", [term; term_tail])
-        -> ast_ize_expr_tail (ast_ize_expr term) term_tail
+        -> print_string "E";
+         ast_ize_expr_tail (ast_ize_expr term) term_tail
   | PT_nt ("T", [factor; factor_tail])
-        -> ast_ize_expr_tail (ast_ize_expr factor) factor_tail
+        -> print_string "T";
+        ast_ize_expr_tail (ast_ize_expr factor) factor_tail
   | PT_nt ("F", [PT_id factor_id])
-        -> AST_id factor_id
+        -> print_string "F";
+         AST_id factor_id
   | PT_nt ("F", [PT_num factor_num])
-        -> AST_num factor_num
+        -> print_string "F";
+        AST_num factor_num
   | PT_nt ("F", [expr])
-        -> ast_ize_expr expr
+        -> print_string "F";
+        ast_ize_expr expr
   | _ -> raise (Failure "malformed parse tree in ast_ize_expr")
 
 and ast_ize_reln_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
   (*ET*)
   match tail with
   | PT_nt ("ET", [PT_term "=="; expr])
-        -> AST_binop ("==", lhs, (ast_ize_expr expr))
+        ->print_string "ET ==";
+         AST_binop ("==", lhs, (ast_ize_expr expr))
   | PT_nt ("ET", [PT_term "<>"; expr])
-        -> AST_binop ("<>", lhs, (ast_ize_expr expr))
+        -> print_string "ET <>";
+        AST_binop ("<>", lhs, (ast_ize_expr expr))
   | PT_nt ("ET", [PT_term "<"; expr])
-        -> AST_binop ("<", lhs, (ast_ize_expr expr))
+        -> print_string "ET <";
+         AST_binop ("<", lhs, (ast_ize_expr expr))
   | PT_nt ("ET", [PT_term ">"; expr])
-        -> AST_binop (">", lhs, (ast_ize_expr expr))
+        -> print_string "ET >";
+        AST_binop (">", lhs, (ast_ize_expr expr))
   | PT_nt ("ET", [PT_term "<="; expr])
-        -> AST_binop ("<=", lhs, (ast_ize_expr expr))
+        -> print_string "ET <=";
+        AST_binop ("<=", lhs, (ast_ize_expr expr))
   | PT_nt ("ET", [PT_term ">="; expr])
-        -> AST_binop (">=", lhs, (ast_ize_expr expr))
+        ->print_string "ET >=";
+        AST_binop (">=", lhs, (ast_ize_expr expr))
   | _ -> raise (Failure "malformed parse tree in ast_ize_reln_tail")
 
 and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
@@ -619,15 +639,21 @@ and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
      tail is a TT or FT parse tree node *)
   match tail with
   | PT_nt ("FT", [PT_term "*"; factor; factor_tail])(*TODO check on this production*)
-        -> AST_binop ("*", lhs, (ast_ize_expr factor))
+        ->print_string "FT *";
+        AST_binop ("*", lhs, (ast_ize_expr factor))
   | PT_nt ("FT", [PT_term "/"; factor; factor_tail])(*TODO check on this production*)
-        -> AST_binop ("/", lhs, (ast_ize_expr factor))
-  | PT_nt ("FT", [PT_term "-"; term; term_tail])(*TODO check on this production*)
-        -> AST_binop ("-", lhs, (ast_ize_expr term))
+        ->print_string "FT /";
+         AST_binop ("/", lhs, (ast_ize_expr factor))
+  | PT_nt ("TT", [PT_term "-"; term; term_tail])(*TODO check on this production*)
+        -> print_string "TT -";
+        AST_binop ("-", lhs, (ast_ize_expr term))
   | PT_nt ("TT", [PT_term "+"; term; term_tail])(*TODO check on this production*)
-        -> AST_binop ("+", lhs, (ast_ize_expr term))
+        -> print_string "TT +";
+        AST_binop ("+", lhs, (ast_ize_expr term))
   | _ -> raise (Failure "malformed parse tree in ast_ize_expr_tail")
 ;;
+
+let primes_ast_tree = ast_ize_P primes_parse_tree;;
 
 (*******************************************************************
     Translate to C
