@@ -6,7 +6,7 @@ Assignment 3: Translation
 
 Files:
 
-Assignment3.ml
+Assignment3.ml: Includes portion of code for creating an Abstraact Syntax tree. All functions take the parse tree as a parameter, match the node of given parse tree to a production, and if we reach a terminal - create an AST node. If we reach an operator, the function takes left subtree as an additional parameter to create an AST_bin node. There was a weird error, that we could still not figure out. At expr_tail and reln_tail passed in node wouldn't match to productions with operators (ao, mo, or ro), but would match to empty tail (e.g. FT -> []), in which case we would return left subtree without operations. Thus there are no operators to be seen in the C program, other than that, all the AST creation is done correctly. 
 
 translator.ml: This was definitely an interesting portion to work on, neither of us had ever created a program that would translate a portion of code
 into another language entirely. This code has been separated into its own file from Assignment3.ml since it was able to compile with any error messages. 
