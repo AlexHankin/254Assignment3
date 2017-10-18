@@ -112,8 +112,8 @@ and translate_expr (ex:ast_e) vlst = match ex with
 	| AST_num (str) -> (str, vlst)
 ;;
 
-let cstuf = (translate []);;
-let cstuf2 = snd cstuf;;
-print_string cstuf2;;
+let ctest = (translate []);;
+let ctest2 = snd ctest;;
+print_string ctest2;;
 (*	
 	*)
