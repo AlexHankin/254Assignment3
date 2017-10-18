@@ -489,11 +489,11 @@ let parse (parse_tab:parse_table) (program:string) : parse_tree =
             if tos = term then
               begin
               
-                print_string ("   match " ^ tos);
+              (*   print_string ("   match " ^ tos);
                 print_string
-                    (if tos <> term     (*value comparison*)
+                    (if tos <> term     value comparison
                          then (" (" ^ tok ^ ")") else "");
-                print_newline ();
+                print_newline (); *)
               
                 helper ps_tail more_tokens
                        (( match term with
@@ -510,10 +510,10 @@ let parse (parse_tab:parse_table) (program:string) : parse_tree =
             | PA_prediction(rhs) ->
                 begin
                 
-                  print_string ("   predict " ^ tos ^ " ->");
+               (*    print_string ("   predict " ^ tos ^ " ->");
                   print_string (fold_left (fun a b -> a ^ " " ^ b) "" rhs);
                   print_newline ();
-                
+                 *)
                   helper ((fold_left (@) [] 
                                     (map (fun s -> [PS_sym(s)]) rhs))
                               @ [PS_end(length rhs)] @ ps_tail)
@@ -524,7 +524,7 @@ let parse (parse_tab:parse_table) (program:string) : parse_tree =
 let cg_parse_table = get_parse_table calc_gram;;
 
 let ecg_parse_table = get_parse_table ecg;;
-(* let cg_parse_tree = parse cg_parse_table calc_gram;; parse trees to later pass as parameter to act_ize_P *)
+(* let cg_parse_tree = parse cg_parse_table sum_ave_prog;; parse trees to later pass as parameter to act_ize_P *)
 let sum_ave_parse_tree = parse ecg_parse_table sum_ave_prog;;
 let primes_parse_tree = parse ecg_parse_table primes_prog;;
 
@@ -575,81 +575,56 @@ and helper2 (parse_list:parse_tree list) : ast_sl =
 and ast_ize_S (s:parse_tree) : ast_s =
   match s with
   | PT_nt ("S", [PT_id lhs; PT_term ":="; expr])
-        -> print_string "S -> :=";
-        print_string lhs;
-        print_string " \n";
-        AST_assign (lhs, (ast_ize_expr expr))
+        -> AST_assign (lhs, (ast_ize_expr expr))
   | PT_nt ("S", [PT_term "read"; PT_id rhs]) 
-        ->print_string "S -> read";
-        print_string rhs;
-        print_string "\n";
-         AST_read rhs
+        -> AST_read rhs
   | PT_nt ("S", [PT_term "write"; expr])
-        -> print_string "S -> write\n ";
-        AST_write (ast_ize_expr expr)
+        -> AST_write (ast_ize_expr expr)
   | PT_nt ("S", [PT_term "if"; rel; sl; PT_term "fi"])
-        -> print_string "S -> if\n";
-        AST_if ((ast_ize_expr rel), (ast_ize_SL sl))
+        -> AST_if ((ast_ize_expr rel), (ast_ize_SL sl))
   | PT_nt ("S", [PT_term "do"; sl; PT_term "od"])
-        ->print_string "S -> do \n";
-         AST_do (ast_ize_SL sl)
+        -> AST_do (ast_ize_SL sl)
   | PT_nt ("S", [PT_term "check"; rel])
-        -> print_string "S -> check \n";
-        AST_check (ast_ize_expr rel)
+        -> AST_check (ast_ize_expr rel)
   | _ -> raise (Failure "malformed parse tree in ast_ize_S")
 
 and ast_ize_expr (e:parse_tree) : ast_e =
   (* e is an R, E, T, or F parse tree node *)
   match e with
   | PT_nt ("R", [expr; expr_tail])
-        -> print_string "R\n";
-         ast_ize_reln_tail (ast_ize_expr expr) expr_tail 
+        -> ast_ize_reln_tail (ast_ize_expr expr) expr_tail 
   | PT_nt ("E", [term; term_tail])
-        -> print_string "E\n";
-         ast_ize_expr_tail (ast_ize_expr term) term_tail
+        -> ast_ize_expr_tail (ast_ize_expr term) term_tail
   | PT_nt ("T", [factor; factor_tail])
         -> print_string "T\n";
         ast_ize_expr_tail (ast_ize_expr factor) factor_tail
   | PT_nt ("F", [PT_id factor_id])
-        -> print_string "F\n";
-         print_string factor_id;
-         print_string "\n";
-         AST_id factor_id
+        -> AST_id factor_id
   | PT_nt ("F", [PT_num factor_num])
-        -> print_string "F\n";
-        print_string factor_num;
-        print_string "\n";
-        AST_num factor_num
+        -> AST_num factor_num
   | PT_nt ("F", [expr])
-        -> print_string "F";
-        ast_ize_expr expr
+        -> ast_ize_expr expr
   | _ -> raise (Failure "malformed parse tree in ast_ize_expr")
 
 and ast_ize_reln_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
   (*ET*)
   match tail with
   | PT_nt ("ET", [PT_term "=="; expr;expr_tail])
-        ->print_string "ET ==\n";
-         AST_binop ("==", lhs, (ast_ize_expr expr))
+        -> AST_binop ("==", lhs, (ast_ize_expr expr))
   | PT_nt ("ET", [PT_term "<>"; expr;expr_tail])
-        -> print_string "ET <>\n";
-        AST_binop ("<>", lhs, (ast_ize_expr expr))
+        -> AST_binop ("<>", lhs, (ast_ize_expr expr))
   | PT_nt ("ET", [PT_term "<"; expr;expr_tail])
-        -> print_string "ET <\n";
+        -> (* print_string "ET <\n"; *)
          AST_binop ("<", lhs, (ast_ize_expr expr))
   | PT_nt ("ET", [PT_term ">"; expr;expr_tail])
-        -> print_string "ET >\n";
+        -> (* print_string "ET >\n"; *)
         AST_binop (">", lhs, (ast_ize_expr expr))
   | PT_nt ("ET", [PT_term "<="; expr;expr_tail])
-        -> print_string "ET <=\n";
-        AST_binop ("<=", lhs, (ast_ize_expr expr))
+        -> AST_binop ("<=", lhs, (ast_ize_expr expr))
   | PT_nt ("ET", [PT_term ">="; expr; expr_tail])
-        ->print_string "ET >=\n";
-        AST_binop (">=", lhs, (ast_ize_expr expr))
-  | PT_nt ("ET", []) -> print_string "ET \n";
-      lhs
-  | PT_nt ("SL", [])
-  -> lhs
+        -> AST_binop (">=", lhs, (ast_ize_expr expr))
+  | PT_nt ("ET", []) -> lhs
+  | PT_nt ("SL", []) -> lhs
   | _ -> lhs
 
 and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
@@ -657,26 +632,19 @@ and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
      tail is a TT or FT parse tree node *)
   match tail with
   | PT_nt ("FT", [PT_term "*"; factor; factor_tail])(*TODO check on this production*)
-        ->print_string "FT *\n";
-        AST_binop ("*", lhs, (ast_ize_expr_tail (ast_ize_expr factor) factor_tail))
+        -> AST_binop ("*", lhs, (ast_ize_expr_tail (ast_ize_expr factor) factor_tail))
   | PT_nt ("FT", [PT_term "/"; factor; factor_tail])(*TODO check on this production*)
-        ->print_string "FT /\n";
-         AST_binop ("/", lhs, (ast_ize_expr_tail (ast_ize_expr factor) factor_tail))
+        -> AST_binop ("/", lhs, (ast_ize_expr_tail (ast_ize_expr factor) factor_tail))
   | PT_nt ("TT", [PT_term "-"; term; term_tail])(*TODO check on this production*)
-        -> print_string "TT -\n";
-        AST_binop ("-", lhs, (ast_ize_expr_tail (ast_ize_expr term) term_tail))
+        -> AST_binop ("-", lhs, (ast_ize_expr_tail (ast_ize_expr term) term_tail))
   | PT_nt ("TT", [PT_term "+"; term; term_tail])(*TODO check on this production*)
-        -> print_string "TT +\n";
-        AST_binop ("+", lhs, (ast_ize_expr term))
+        -> AST_binop ("+", lhs, (ast_ize_expr term))
   | PT_nt ("FT", [])(*TODO check on this production*)
-        ->print_string "FT \n";
-        lhs
+        -> lhs
   | PT_nt ("TT", [])(*TODO check on this production*)
-        -> print_string "TT -\n";
-        lhs
+        -> lhs
   | PT_nt ("ET", [])
-        -> print_string "ET \n";
-        lhs
+        -> lhs
   | PT_nt ("SL", [])
   -> lhs
   | _ -> lhs
@@ -684,10 +652,10 @@ and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
 
 let primes_ast_tree = ast_ize_P primes_parse_tree;;
 
-(* let sum_ast_tree = ast_ize_P sum_ave_parse_tree;;
- *)(*******************************************************************
+ let sum_ast_tree = ast_ize_P sum_ave_parse_tree;;
+ (*******************************************************************
     Translate to C
- *******************************************************************)
+ ******************************************************************)
 
 (* The code below is (obviously) a bare stub.  The intent is that when
    you run translate on a full, correct AST, you'll get back code for an
@@ -799,8 +767,13 @@ and translate_expr (ex:ast_e) vlst = match ex with
 let cstuf = (translate []);;
 let c_primes_stuf = (translate primes_ast_tree);;
 let c_primes_stuf2 = snd c_primes_stuf;;
+let c_sum_stuf = (translate  sum_ast_tree);;
+let c_sum_stuf2 = snd c_sum_stuf;;
 let cstuf2 = snd cstuf;;
 print_string cstuf2;;
+print_string "\n\n\n";;
 print_string c_primes_stuf2;;
+print_string "\n\n\n";;
+print_string c_sum_stuf2;;
 (*  
   *)
