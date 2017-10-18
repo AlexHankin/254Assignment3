@@ -526,8 +526,8 @@ let cg_parse_table = get_parse_table calc_gram;;
 let ecg_parse_table = get_parse_table ecg;;
 (* let cg_parse_tree = parse cg_parse_table calc_gram;; parse trees to later pass as parameter to act_ize_P *)
 let sum_ave_parse_tree = parse ecg_parse_table sum_ave_prog;;
-(* let primes_parse_tree = parse ecg_parse_table primes_prog;;
- *)
+let primes_parse_tree = parse ecg_parse_table primes_prog;;
+
 (*******************************************************************
   Everything above this point in the file is complete and (I think)
   usable as-is.  The rest of the file, from here down, is a skeleton
@@ -575,7 +575,9 @@ and helper2 (parse_list:parse_tree list) : ast_sl =
 and ast_ize_S (s:parse_tree) : ast_s =
   match s with
   | PT_nt ("S", [PT_id lhs; PT_term ":="; expr])
-        -> print_string "S -> := \n";
+        -> print_string "S -> :=";
+        print_string lhs;
+        print_string " \n";
         AST_assign (lhs, (ast_ize_expr expr))
   | PT_nt ("S", [PT_term "read"; PT_id rhs]) 
         ->print_string "S -> read";
@@ -599,9 +601,9 @@ and ast_ize_S (s:parse_tree) : ast_s =
 and ast_ize_expr (e:parse_tree) : ast_e =
   (* e is an R, E, T, or F parse tree node *)
   match e with
-  (*  PT_nt ("R", [expr; expr_tail])
+  | PT_nt ("R", [expr; expr_tail])
         -> print_string "R\n";
-         ast_ize_reln_tail (ast_ize_expr expr) expr_tail *)
+         ast_ize_reln_tail (ast_ize_expr expr) expr_tail 
   | PT_nt ("E", [term; term_tail])
         -> print_string "E\n";
          ast_ize_expr_tail (ast_ize_expr term) term_tail
@@ -623,29 +625,32 @@ and ast_ize_expr (e:parse_tree) : ast_e =
         ast_ize_expr expr
   | _ -> raise (Failure "malformed parse tree in ast_ize_expr")
 
-(* and ast_ize_reln_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
+and ast_ize_reln_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
   (*ET*)
   match tail with
-  | PT_nt ("ET", [PT_term "=="; expr])
+  | PT_nt ("ET", [PT_term "=="; expr;expr_tail])
         ->print_string "ET ==\n";
          AST_binop ("==", lhs, (ast_ize_expr expr))
-  | PT_nt ("ET", [PT_term "<>"; expr])
+  | PT_nt ("ET", [PT_term "<>"; expr;expr_tail])
         -> print_string "ET <>\n";
         AST_binop ("<>", lhs, (ast_ize_expr expr))
-  | PT_nt ("ET", [PT_term "<"; expr])
+  | PT_nt ("ET", [PT_term "<"; expr;expr_tail])
         -> print_string "ET <\n";
          AST_binop ("<", lhs, (ast_ize_expr expr))
-  | PT_nt ("ET", [PT_term ">"; expr])
+  | PT_nt ("ET", [PT_term ">"; expr;expr_tail])
         -> print_string "ET >\n";
         AST_binop (">", lhs, (ast_ize_expr expr))
-  | PT_nt ("ET", [PT_term "<="; expr])
+  | PT_nt ("ET", [PT_term "<="; expr;expr_tail])
         -> print_string "ET <=\n";
         AST_binop ("<=", lhs, (ast_ize_expr expr))
-  | PT_nt ("ET", [PT_term ">="; expr])
+  | PT_nt ("ET", [PT_term ">="; expr; expr_tail])
         ->print_string "ET >=\n";
         AST_binop (">=", lhs, (ast_ize_expr expr))
-  | PT_nt ("ET", []) -> AST_id "empty"
-  | _ -> raise (Failure "malformed parse tree in ast_ize_reln_tail") *)
+  | PT_nt ("ET", []) -> print_string "ET \n";
+      lhs
+  | PT_nt ("SL", [])
+  -> lhs
+  | _ -> lhs
 
 and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
   (* lhs in an inherited attribute.
@@ -653,30 +658,34 @@ and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
   match tail with
   | PT_nt ("FT", [PT_term "*"; factor; factor_tail])(*TODO check on this production*)
         ->print_string "FT *\n";
-        AST_binop ("*", lhs, (ast_ize_expr factor))
+        AST_binop ("*", lhs, (ast_ize_expr_tail (ast_ize_expr factor) factor_tail))
   | PT_nt ("FT", [PT_term "/"; factor; factor_tail])(*TODO check on this production*)
         ->print_string "FT /\n";
-         AST_binop ("/", lhs, (ast_ize_expr factor))
+         AST_binop ("/", lhs, (ast_ize_expr_tail (ast_ize_expr factor) factor_tail))
   | PT_nt ("TT", [PT_term "-"; term; term_tail])(*TODO check on this production*)
         -> print_string "TT -\n";
-        AST_binop ("-", lhs, (ast_ize_expr term))
+        AST_binop ("-", lhs, (ast_ize_expr_tail (ast_ize_expr term) term_tail))
   | PT_nt ("TT", [PT_term "+"; term; term_tail])(*TODO check on this production*)
         -> print_string "TT +\n";
         AST_binop ("+", lhs, (ast_ize_expr term))
   | PT_nt ("FT", [])(*TODO check on this production*)
-        ->print_string "FT /\n";
-        (ast_ize_expr_tail lhs tail)
+        ->print_string "FT \n";
+        lhs
   | PT_nt ("TT", [])(*TODO check on this production*)
         -> print_string "TT -\n";
-        (ast_ize_SL tail);
-        lhs;
-  | _ -> raise (Failure "malformed parse tree in ast_ize_expr_tail")
+        lhs
+  | PT_nt ("ET", [])
+        -> print_string "ET \n";
+        lhs
+  | PT_nt ("SL", [])
+  -> lhs
+  | _ -> lhs
 ;;
 
-(* let primes_ast_tree = ast_ize_P primes_parse_tree;; *)
+let primes_ast_tree = ast_ize_P primes_parse_tree;;
 
-let sum_ast_tree = ast_ize_P sum_ave_parse_tree;;
-(*******************************************************************
+(* let sum_ast_tree = ast_ize_P sum_ave_parse_tree;;
+ *)(*******************************************************************
     Translate to C
  *******************************************************************)
 
@@ -687,28 +696,111 @@ let sum_ast_tree = ast_ize_P sum_ave_parse_tree;;
    indicating their names and the lines on which the writes occur.  Your
    C program should contain code to check for dynamic semantic errors. *)
 
-(*  commented out so this code will complile
+let append l1 l2 =
+  let rec loop acc l1 l2 =
+    match l1, l2 with
+    | [], [] -> List.rev acc
+    | [], h :: t -> loop (h :: acc) [] t
+    | h :: t, l -> loop (h :: acc) t l
+    in
+    loop [] l1 l2;;
+
+let rec string_of_chars strs = 
+  match strs with
+  | [] -> ""
+  | x :: l -> String.concat " " [x;string_of_chars l]
+;;
+
+let rec rem_item strs a=
+  match strs with
+  | [] -> []
+  | x :: l when x == a -> rem_item l a
+  | x :: l -> [x]@(rem_item l a)
+;;
 
 let rec translate (ast:ast_sl)
     :  string *  string
-    (* warnings  output_program *) = ...
+    (* warnings  output_program *) =
+    let cProgram = "#include <stdio.h>\n #include <stdlib.h>\nint getint() {\nint myint;\nif (scanf(\"%d\", &myint) == 1){\nreturn myint;}\nelse {\nprintf(\"The input value is not of type int\");\nprintf(\"Terminating program...\");\nexit(0);}}\nvoid putint(int n) {\nprintf(\"%d\", n);\nprintf(\"\\n\");\n}\nint main () {" in
+    let errorMsg = "Warning: the following variables are read or assigned but never used, " in
+    let varList = ["List:"] in
+    let cProgram2 = 
+      match ast with
+      | [] -> ("", [])
+      | x :: l -> let sReturn = translate_s x varList in
+            let slReturn = translate_sl l varList in
+            (String.concat " " [(fst sReturn); (fst slReturn)], (snd sReturn)@(snd slReturn)) in
+  let cProgram3 = String.concat " " [cProgram;(fst cProgram2);"}"] in
+  let errorList = string_of_chars (snd cProgram2) in
+  let errorResult = String.concat " " [errorMsg;errorList] in
+    (errorResult, cProgram3)
 
-and translate_sl (...
+and translate_sl (ast:ast_sl) (vlst) = match ast with
+  | [] -> ("", [])
+  | x :: l -> let sReturn = translate_s x vlst in
+          let slReturn = translate_sl l vlst in
+          (String.concat " " [(fst sReturn); (fst slReturn)], (snd sReturn)@(snd slReturn))
 
-and translate_s (...
+and translate_s (ast:ast_s) vlst =
+  match ast with
+    | AST_error -> ("ERROR", [])
+    | AST_assign (str, ex) -> translate_assign str ex vlst
+    | AST_read (str) -> translate_read str vlst
+    | AST_write (ex) -> translate_write ex vlst
+    | AST_if (ex, statl) -> translate_if ex statl vlst
+    | AST_do (statl) -> translate_do statl vlst
+    | AST_check (ex) -> translate_check ex vlst
 
-and translate_assign (...
+and translate_assign (id:string) (ex:ast_e) vlst  =
+  if List.mem id vlst then
+    let exReturn = translate_expr ex vlst in
+    (String.concat " " [id; "="; (fst exReturn); ";"], (snd exReturn))
+  else
+    let vlst2 = vlst@[id] in
+    let exReturn = translate_expr ex vlst2 in
+    (String.concat " " ["int"; id; "="; (fst exReturn); ";"], (snd exReturn))
 
-and translate_read (...
+and translate_read (id:string) vlst =
+  if List.mem id vlst then 
+    (String.concat " " ["int"; id; ";"], vlst)
+  else
+    let vlst2 = vlst@[id] in
+    (String.concat " " ["int"; id; ";"], vlst2)
+  
+and translate_if (ex:ast_e) (stat:ast_sl) vlst =
+  let exReturn = translate_expr ex vlst in
+  let slReturn = translate_sl stat (snd exReturn) in 
+  (String.concat " " ["if(";(fst exReturn);") {";(fst slReturn); "}"], (snd slReturn))
 
-and translate_write (...
+and translate_do (stat: ast_sl) vlst =
+  let slReturn = translate_sl stat vlst in 
+  (String.concat " " ["while(";(fst slReturn);"}"], (snd slReturn))
 
-and translate_if (...
+and translate_check (ex: ast_e) vlst =
+  let exReturn = translate_expr ex vlst in
+  (String.concat " " [(fst exReturn);") {"], (snd exReturn))
 
-and translate_do (...
+and translate_write (id:ast_e) vlst =
+  let exReturn = translate_expr id vlst in
+  (String.concat " " ["printf(%d\n,";(fst exReturn);");"], (snd exReturn))
+  
+and translate_expr (ex:ast_e) vlst = match ex with
+  | AST_binop (op, left_ex, right_ex) -> let exLeft = translate_expr left_ex vlst in
+                      let exRight = translate_expr right_ex (snd exLeft) in
+                      (String.concat " " [(fst exLeft) ;op;(fst exRight)], (snd exRight))
+  | AST_id (str) -> if List.mem str vlst then 
+            let vlst2 = rem_item vlst str in
+            (str, vlst2)
+            else
+            (str, vlst)
+  | AST_num (str) -> (str, vlst)
+;;
 
-and translate_check (...
-
-and translate_expr (...
-
-*)
+let cstuf = (translate []);;
+let c_primes_stuf = (translate primes_ast_tree);;
+let c_primes_stuf2 = snd c_primes_stuf;;
+let cstuf2 = snd cstuf;;
+print_string cstuf2;;
+print_string c_primes_stuf2;;
+(*  
+  *)
