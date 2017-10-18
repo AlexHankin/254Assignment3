@@ -37,12 +37,12 @@ let rec rem_item strs a=
 let rec translate (ast:ast_sl)
     :  string *  string
     (* warnings  output_program *) =
-    let cProgram = "#include <stdio.h>\n #include <stdlib.h>\nint getint() {\nint myint;\nif (scanf(\"%d\", &myint) == 1){\nreturn myint;}\nelse {\nprintf(\"The input value is not of type int\n\");\nprintf(\"Terminating program...\n\");\nexit(0);}}\nvoid putint(int n) {printf(\"%d\n\", n)}\nint main () {" in
+    let cProgram = "#include <stdio.h>\n #include <stdlib.h>\nint getint() {\nint myint;\nif (scanf(\"%d\", &myint) == 1){\nreturn myint;}\nelse {\nprintf(\"The input value is not of type int\");\nprintf(\"Terminating program...\");\nexit(0);}}\nvoid putint(int n) {\nprintf(\"%d\", n);\nprintf(\"\\n\");\n}\nint main () {" in
     let errorMsg = "Warning: the following variables are read or assigned but never used, " in
     let varList = ["List:"] in
     let cProgram2 = 
 	    match ast with
-	    | [] -> (String.concat " " [cProgram; " "], [])
+	    | [] -> ("", [])
 	    | x :: l -> let sReturn = translate_s x varList in
 	    			let slReturn = translate_sl l varList in
 	    			(String.concat " " [(fst sReturn); (fst slReturn)], (snd sReturn)@(snd slReturn)) in
@@ -111,5 +111,9 @@ and translate_expr (ex:ast_e) vlst = match ex with
 						(str, vlst)
 	| AST_num (str) -> (str, vlst)
 ;;
+
+let cstuf = (translate []);;
+let cstuf2 = snd cstuf;;
+print_string cstuf2;;
 (*	
 	*)
