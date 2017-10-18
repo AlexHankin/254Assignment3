@@ -563,7 +563,7 @@ and ast_ize_SL (sl:parse_tree) : ast_sl =
   | PT_nt ("SL", []) -> []
   | PT_nt ("SL", [stat;stat_list]) 
         -> print_string "SL\n";
-         (ast_ize_S stat)::(ast_ize_SL stat_list)
+         [(ast_ize_S stat)]@(ast_ize_SL stat_list)
 (*           |head::tail -> (ast_ize_S stat)::(ast_ize_SL head) *)
   | _ -> raise (Failure "malformed parse tree in ast_ize_SL")
 
@@ -611,7 +611,7 @@ and ast_ize_expr (e:parse_tree) : ast_e =
   | PT_nt ("F", [PT_id factor_id])
         -> print_string "F\n";
          print_string factor_id;
-        print_string "\n";
+         print_string "\n";
          AST_id factor_id
   | PT_nt ("F", [PT_num factor_num])
         -> print_string "F\n";
@@ -663,12 +663,13 @@ and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
   | PT_nt ("TT", [PT_term "+"; term; term_tail])(*TODO check on this production*)
         -> print_string "TT +\n";
         AST_binop ("+", lhs, (ast_ize_expr term))
-  | PT_nt ("TT",[]) -> 
-      print_string "empty TT";
-      AST_id "empty"
-  | PT_nt ("FT", []) -> 
-      print_string "empty FT";
-      AST_id "empty"
+  | PT_nt ("FT", [])(*TODO check on this production*)
+        ->print_string "FT /\n";
+        (ast_ize_expr_tail lhs tail)
+  | PT_nt ("TT", [])(*TODO check on this production*)
+        -> print_string "TT -\n";
+        (ast_ize_SL tail);
+        lhs;
   | _ -> raise (Failure "malformed parse tree in ast_ize_expr_tail")
 ;;
 
