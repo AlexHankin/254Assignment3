@@ -554,15 +554,14 @@ and ast_e =
 let rec ast_ize_P (p:parse_tree) : ast_sl =
   match p with
   | PT_nt ("P", stat_list::rest)
-   -> print_string "P\n";
-        ast_ize_SL stat_list
+   -> ast_ize_SL stat_list
   | _ ->  raise (Failure "malformed parse tree in ast_ize_P")
 
 and ast_ize_SL (sl:parse_tree) : ast_sl =
   match sl with
   | PT_nt ("SL", []) -> []
   | PT_nt ("SL", [stat;stat_list]) 
-        -> print_string "SL\n";
+        -> 
          [(ast_ize_S stat)]@(ast_ize_SL stat_list)
 (*           |head::tail -> (ast_ize_S stat)::(ast_ize_SL head) *)
   | _ -> raise (Failure "malformed parse tree in ast_ize_SL")
@@ -596,7 +595,7 @@ and ast_ize_expr (e:parse_tree) : ast_e =
   | PT_nt ("E", [term; term_tail])
         -> ast_ize_expr_tail (ast_ize_expr term) term_tail
   | PT_nt ("T", [factor; factor_tail])
-        -> print_string "T\n";
+        -> 
         ast_ize_expr_tail (ast_ize_expr factor) factor_tail
   | PT_nt ("F", [PT_id factor_id])
         -> AST_id factor_id
@@ -632,13 +631,17 @@ and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
      tail is a TT or FT parse tree node *)
   match tail with
   | PT_nt ("FT", [PT_term "*"; factor; factor_tail])(*TODO check on this production*)
-        -> AST_binop ("*", lhs, (ast_ize_expr_tail (ast_ize_expr factor) factor_tail))
+        -> (* print_string "FT *\n"; *)
+        AST_binop ("*", lhs, (ast_ize_expr_tail (ast_ize_expr factor) factor_tail))
   | PT_nt ("FT", [PT_term "/"; factor; factor_tail])(*TODO check on this production*)
-        -> AST_binop ("/", lhs, (ast_ize_expr_tail (ast_ize_expr factor) factor_tail))
+        -> (* print_string "FT /\n"; *)
+        AST_binop ("/", lhs, (ast_ize_expr_tail (ast_ize_expr factor) factor_tail))
   | PT_nt ("TT", [PT_term "-"; term; term_tail])(*TODO check on this production*)
-        -> AST_binop ("-", lhs, (ast_ize_expr_tail (ast_ize_expr term) term_tail))
+        -> (* print_string "TT -\n"; *)
+        AST_binop ("-", lhs, (ast_ize_expr_tail (ast_ize_expr term) term_tail))
   | PT_nt ("TT", [PT_term "+"; term; term_tail])(*TODO check on this production*)
-        -> AST_binop ("+", lhs, (ast_ize_expr term))
+        ->(* print_string "FT +\n"; *)
+         AST_binop ("+", lhs, (ast_ize_expr term))
   | PT_nt ("FT", [])(*TODO check on this production*)
         -> lhs
   | PT_nt ("TT", [])(*TODO check on this production*)
